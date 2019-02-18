@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 
 
 class CLIParser : Parser {
-    private val keywords = listOf("cat", "echo", "wc", "pwd", "exit", "grep")
+    private val keywords = listOf("cat", "echo", "wc", "pwd", "exit", "grep", "cd", "ls")
     private val identifierRegex = Regex("[_a-z][_a-z0-9]*")
     private val substitutionRegex = Regex("^\\$$identifierRegex")
     private val identifierAssignmentPattern = Pattern.compile("^$identifierRegex=")
@@ -238,6 +238,8 @@ class CLIParser : Parser {
                 "pwd" -> { interpreter.executePwd() }
                 "exit" -> { interpreter.executeExit() }
                 "grep" -> { processGrep(arguments, previousResult) }
+                "cd" -> { interpreter.executeCd(arguments) }
+                "ls" -> { interpreter.executeLs(arguments) }
                 else -> {emptyList()}
             }
         } catch (e: InterpreterException) {

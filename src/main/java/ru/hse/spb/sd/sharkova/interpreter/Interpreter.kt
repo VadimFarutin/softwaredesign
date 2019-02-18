@@ -5,6 +5,7 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.lang.StringBuilder
 import java.nio.charset.Charset
+import java.nio.file.Paths
 
 class Interpreter {
     private interface CLICommand {
@@ -209,6 +210,44 @@ class Interpreter {
         }
     }
 
+    private object CdCommand : CLICommand {
+        override fun execute(arguments: List<String>): List<String> {
+            val currentDirectory = System.getProperty("user.dir")
+            val newDirectory = arguments.getOrElse(0) { "./" }
+
+            val newCanonicalPath = if (Paths.get(newDirectory).isAbsolute) {
+                File(newDirectory).canonicalFile.canonicalPath
+            } else {
+                File(currentDirectory, newDirectory).canonicalFile.canonicalPath
+            }
+
+            System.setProperty("user.dir", newCanonicalPath)
+
+            return emptyList()
+        }
+    }
+
+    private object LsCommand : CLICommand {
+        override fun execute(arguments: List<String>): List<String> {
+            val currentDirectory = System.getProperty("user.dir")
+            val path = arguments.getOrElse(0) { "./" }
+
+            val file = if (Paths.get(path).isAbsolute) {
+                File(path).canonicalFile
+            } else {
+                File(currentDirectory, path).canonicalFile
+            }
+
+            val files = if (file.isDirectory) {
+                file.listFiles()
+            } else {
+                arrayOf(file)
+            }
+
+            return files.map(File::getName)
+        }
+    }
+
     private object ExitCommand : CLICommand {
         override fun execute(arguments: List<String>): List<String> {
             System.exit(0)
@@ -327,6 +366,24 @@ class Interpreter {
      */
     fun executePwd(): List<String> {
         return PwdCommand.execute(emptyList())
+    }
+
+    /**
+     * This method executes the 'cd' command,
+     * which changes the working directory to a given path
+     * or to the root if called without arguments.
+     */
+    fun executeCd(args: List<String>): List<String> {
+        return CdCommand.execute(args)
+    }
+
+    /**
+     * This method executes the 'ls' command,
+     * which outputs content of the working directory.
+     * @return a list containing names of files and directories in the current directory
+     */
+    fun executeLs(args: List<String>): List<String> {
+        return LsCommand.execute(args)
     }
 
     /**

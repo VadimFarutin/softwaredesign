@@ -2,6 +2,7 @@ package ru.hse.spb.sd.sharkova.interpreter
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.io.File
 import java.io.IOException
 
 class InterpreterTest {
@@ -72,6 +73,40 @@ class InterpreterTest {
         val res = parser.parseInput("pwd")
         val expected = "pwd".runCommand()
         assertEquals(listOf(expected), res)
+    }
+
+    @Test
+    fun testCdNoArguments() {
+        val expectedOutput = emptyList<String>()
+        val expectedPath = System.getProperty("user.dir")
+        val res = parser.parseInput("cd")
+        assertEquals(expectedOutput, res)
+        assertEquals(expectedPath, System.getProperty("user.dir"))
+    }
+
+    @Test
+    fun testCdSubdirectory() {
+        val expectedOutput = emptyList<String>()
+        val expectedPath = System.getProperty("user.dir") + File.separator + "src"
+        val res = parser.parseInput("cd src")
+        assertEquals(expectedOutput, res)
+        assertEquals(expectedPath, System.getProperty("user.dir"))
+    }
+
+    @Test
+    fun testLsNoArguments() {
+        val root = System.getProperty("user.dir")
+        System.setProperty("user.dir", root + File.separator + "src")
+        val expectedOutput = listOf("main", "test")
+        val res = parser.parseInput("ls")
+        assertEquals(expectedOutput, res)
+    }
+
+    @Test
+    fun testLsSubdirectory() {
+        val expectedOutput = listOf("main", "test")
+        val res = parser.parseInput("ls src")
+        assertEquals(expectedOutput, res)
     }
 
     // run this one separately because it literally exits

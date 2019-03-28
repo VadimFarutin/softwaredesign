@@ -23,7 +23,7 @@ class Interpreter {
             val result = mutableListOf<String>()
 
             for (argument in arguments) {
-                val file = File(argument)
+                val file = Environment.getFile(argument)
                 if (!file.exists()) {
                     throw IncorrectArgumentException("cat", argument, "No such file or directory")
                 } else if (file.isDirectory) {
@@ -108,7 +108,7 @@ class Interpreter {
 
             val res = mutableListOf<String>()
             for (argument in arguments) {
-                val file = File(argument)
+                val file = Environment.getFile(argument)
                 if (!file.exists()) {
                     throw IncorrectArgumentException("wc", argument, "No such file or directory")
                 } else if (file.isDirectory) {
@@ -206,22 +206,14 @@ class Interpreter {
 
     private object PwdCommand : CLICommand {
         override fun execute(arguments: List<String>): List<String> {
-            return listOf(System.getProperty("user.dir"))
+            return listOf(Environment.getCurrentDirectory().toString())
         }
     }
 
     private object CdCommand : CLICommand {
         override fun execute(arguments: List<String>): List<String> {
-            val currentDirectory = System.getProperty("user.dir")
-            val newDirectory = arguments.getOrElse(0) { "./" }
-
-            val newCanonicalPath = if (Paths.get(newDirectory).isAbsolute) {
-                File(newDirectory).canonicalFile.canonicalPath
-            } else {
-                File(currentDirectory, newDirectory).canonicalFile.canonicalPath
-            }
-
-            System.setProperty("user.dir", newCanonicalPath)
+            val newDirectory = arguments.getOrElse(0) { System.getProperty("user.home") }
+            Environment.setCurrentDirectory(newDirectory)
 
             return emptyList()
         }
@@ -229,13 +221,18 @@ class Interpreter {
 
     private object LsCommand : CLICommand {
         override fun execute(arguments: List<String>): List<String> {
-            val currentDirectory = System.getProperty("user.dir")
-            val path = arguments.getOrElse(0) { "./" }
+            if (arguments.isEmpty()) {
+                return listFileNames(Environment.getCurrentDirectory().toString())
+            }
 
-            val file = if (Paths.get(path).isAbsolute) {
-                File(path).canonicalFile
-            } else {
-                File(currentDirectory, path).canonicalFile
+            return arguments.flatMap { listFileNames(it) }
+        }
+
+        private fun listFileNames(path: String): List<String> {
+            val file = Environment.getFile(path)
+
+            if (!file.exists()) {
+                throw IncorrectArgumentException("ls", path, "No such file or directory")
             }
 
             val files = if (file.isDirectory) {
@@ -258,6 +255,7 @@ class Interpreter {
     private object ExternalCommand: CLICommand {
         override fun execute(arguments: List<String>): List<String> {
             val processBuilder = ProcessBuilder(arguments)
+            processBuilder.directory(Environment.getCurrentDirectory().toFile())
             processBuilder.start()
             return emptyList()
         }

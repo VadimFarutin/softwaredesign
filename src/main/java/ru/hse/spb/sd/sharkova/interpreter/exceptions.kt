@@ -10,3 +10,7 @@ abstract class InterpreterException(message: String) : Exception(message)
 
 class IncorrectArgumentException(commandName: String, argumentName: String, message: String) :
         InterpreterException("$commandName: $argumentName: $message")
+
+abstract class EnvironmentException(message: String) : Exception(message)
+
+class WrongDirectoryException(message: String = "can not change to a new directory") : EnvironmentException(message)

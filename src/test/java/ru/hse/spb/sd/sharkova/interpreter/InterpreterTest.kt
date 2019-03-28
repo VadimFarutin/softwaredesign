@@ -1,9 +1,11 @@
 package ru.hse.spb.sd.sharkova.interpreter
 
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.io.IOException
+import java.nio.file.Paths
 
 class InterpreterTest {
     private val file1Lines = listOf("text\n", "line\n", "\n", "the previous line was an empty one\n")
@@ -19,6 +21,11 @@ class InterpreterTest {
     private val file2Wc = "0 109 651"
     
     private val parser = CLIParser()
+
+    @Before
+    fun initDirectory() {
+        Environment.setCurrentDirectory(Paths.get(".").toAbsolutePath().normalize().toString())
+    }
 
     @Test
     fun testEcho() {
@@ -78,25 +85,24 @@ class InterpreterTest {
     @Test
     fun testCdNoArguments() {
         val expectedOutput = emptyList<String>()
-        val expectedPath = System.getProperty("user.dir")
+        val expectedPath = System.getProperty("user.home")
         val res = parser.parseInput("cd")
         assertEquals(expectedOutput, res)
-        assertEquals(expectedPath, System.getProperty("user.dir"))
+        assertEquals(expectedPath, Environment.getCurrentDirectory().toString())
     }
 
     @Test
     fun testCdSubdirectory() {
         val expectedOutput = emptyList<String>()
-        val expectedPath = System.getProperty("user.dir") + File.separator + "src"
+        val expectedPath = Environment.getCurrentDirectory().toString() + File.separator + "src"
         val res = parser.parseInput("cd src")
         assertEquals(expectedOutput, res)
-        assertEquals(expectedPath, System.getProperty("user.dir"))
+        assertEquals(expectedPath, Environment.getCurrentDirectory().toString())
     }
 
     @Test
     fun testLsNoArguments() {
-        val root = System.getProperty("user.dir")
-        System.setProperty("user.dir", root + File.separator + "src")
+        Environment.setCurrentDirectory("src")
         val expectedOutput = listOf("main", "test")
         val res = parser.parseInput("ls")
         assertEquals(expectedOutput, res)

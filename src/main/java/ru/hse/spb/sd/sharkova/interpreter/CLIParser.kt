@@ -242,12 +242,17 @@ class CLIParser : Parser {
                 "ls" -> { interpreter.executeLs(arguments) }
                 else -> {emptyList()}
             }
-        } catch (e: InterpreterException) {
-            val errorMessage = e.message
-            if (errorMessage != null) {
-                errorList.add(errorMessage)
+        } catch (e: Exception) {
+            when (e) {
+                is InterpreterException, is EnvironmentException -> {
+                    val errorMessage = e.message
+                    if (errorMessage != null) {
+                        errorList.add(errorMessage)
+                    }
+                    emptyList()
+                }
+                else -> throw e
             }
-            emptyList()
         }
     }
 
